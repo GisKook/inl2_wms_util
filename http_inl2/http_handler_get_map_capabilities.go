@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	WMS_URL string = "wms_url"
+	WMS_URL  string = "wms_url"
+	CALLBACK string = "callback"
 )
 
 type GetMapCapabilitiesResponse struct {
@@ -42,8 +43,12 @@ func GetMapCapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	wms_url := r.Form.Get(WMS_URL)
+	_wms_url := r.Form.Get(WMS_URL)
+
+	wms_url := fmt.Sprintf("%s?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetCapabilities", _wms_url)
 	log.Println(wms_url)
+
+	call_back := r.Form.Get(CALLBACK)
 
 	http_client := &http.Client{}
 
@@ -65,5 +70,9 @@ func GetMapCapabilitiesHandler(w http.ResponseWriter, r *http.Request) {
 		Capabilities: string(body),
 	})
 
-	fmt.Fprint(w, string(response))
+	if call_back == "" {
+		fmt.Fprint(w, string(response))
+	} else {
+		fmt.Fprintf(w, "%s(%s)", call_back, string(response))
+	}
 }
